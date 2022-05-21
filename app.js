@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {graphqlHTTP} = require('express-graphql');
 const { buildSchema } = require('graphql');
+const mongoose = require('mongoose');
 
 const PORT = 6767;
 
@@ -61,5 +62,12 @@ app.use(
   })
 )
 
-app.listen(PORT, () => console.log(`nodemon listening on http://localhost:${PORT}/graphql`))
+mongoose.connect(`mongodb+srv://${process.env.MONGO_UN}:${process.env.MONGO_PW}@cluster0.dgdnm.mongodb.net/?retryWrites=true&w=majority`)
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`DB connected and nodemon listening on http://localhost:${PORT}/graphql`)
+    })
+  })
+  .catch((err) => console.log('error connecting to mongo cluster', err))
+
 
