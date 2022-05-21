@@ -5,6 +5,7 @@ const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
 
 const Event = require('./models/events');
+const User = require('./models/users');
 
 const PORT = 6767;
 
@@ -29,11 +30,22 @@ app.use(
         price: Float!
         date: String!
       }
+      type User {
+        _id: ID!
+        email: String!
+        password: String
+      }
+      input UserInput {
+        email: String!
+        password: String!
+      }
       type RootQuery {
         events: [Event!]!
+        user: User!
       }
       type RootMutation {
         createEvent(eventInput: EventInput): Event
+        createUser(userInput: UserInput): User
       }
       schema {
         query: RootQuery
@@ -51,6 +63,12 @@ app.use(
           throw err;
         }
       },
+      user: async (arg) => {
+        console.log('user arg', arg)
+        // try {
+        //   const user = await
+        // }
+      },
       createEvent: async (args) => {
         const { title, description, price } = args.eventInput;
         const event = new Event({
@@ -64,6 +82,20 @@ app.use(
           return {...newEvent._doc}
         } catch (err) {
           console.log('create event err', err)
+          throw err;
+        }
+      },
+      createUser: async (args) => {
+        const { email, password } = args.userInput;
+        const user = new User({
+          email,
+          password
+        })
+        try {
+          const newUser = await user.save();
+          return {...newUser._doc}
+        } catch (err) {
+          console.log('error creating new user', err);
           throw err;
         }
       }
