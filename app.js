@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const {graphqlHTTP} = require('express-graphql');
 const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const Event = require('./models/events');
 const User = require('./models/users');
@@ -41,7 +42,7 @@ app.use(
       }
       type RootQuery {
         events: [Event!]!
-        user: User!
+        user(email: String): User
       }
       type RootMutation {
         createEvent(eventInput: EventInput): Event
@@ -64,10 +65,16 @@ app.use(
         }
       },
       user: async (arg) => {
+        const { email } = arg;
         console.log('user arg', arg)
-        // try {
-        //   const user = await
-        // }
+        try {
+          const user = await User.find({ email })
+          console.log('user: ', user)
+          return user[0] ? {...user[0]._doc} : {};
+        } catch (err) {
+          console.log('error fetching user from DB', err);
+          throw err;
+        }
       },
       createEvent: async (args) => {
         const { title, description, price } = args.eventInput;
@@ -87,11 +94,12 @@ app.use(
       },
       createUser: async (args) => {
         const { email, password } = args.userInput;
-        const user = new User({
-          email,
-          password
-        })
         try {
+          const hashedPw = await bcrypt.hash(password, 12);
+          const user = new User({
+            email,
+            password: hashedPw
+          })
           const newUser = await user.save();
           return {...newUser._doc}
         } catch (err) {
