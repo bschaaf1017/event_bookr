@@ -4,11 +4,11 @@ const {graphqlHTTP} = require('express-graphql');
 const { buildSchema } = require('graphql');
 const mongoose = require('mongoose');
 
+const Event = require('./models/events');
+
 const PORT = 6767;
 
 const app = express();
-
-const events = [];
 
 app.use(bodyParser.json());
 
@@ -42,27 +42,30 @@ app.use(
     `),
     rootValue: {
       events: () => events,
-      createEvent: (args) => {
+      createEvent: async (args) => {
         console.log('createEvent args', args);
         const { title, description, price } = args.eventInput;
-        const newId = events.length === 0 ? 1 : parseInt(events[events.length - 1]._id) + 1;
         const event = {
-          _id: newId.toString(),
           title,
           description,
           price,
-          date: new Date().getTime()
+          date: new Date()
         }
-
-        events.push(event);
-        return event;
+        try {
+          const newEvent = await Event.create(event)
+          console.log('newEvent: ', newEvent)
+          newEvent.date = new Date(newEvent.date).toISOString();
+          return newEvent
+        } catch (err) {
+          console.log('create event err', err)
+        }
       }
     },
     graphiql: true
   })
 )
 
-mongoose.connect(`mongodb+srv://${process.env.MONGO_UN}:${process.env.MONGO_PW}@cluster0.dgdnm.mongodb.net/?retryWrites=true&w=majority`)
+mongoose.connect(`mongodb+srv://${process.env.MONGO_UN}:${process.env.MONGO_PW}@cluster0.dgdnm.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`)
   .then(() => {
     app.listen(PORT, () => {
       console.log(`DB connected and nodemon listening on http://localhost:${PORT}/graphql`)
