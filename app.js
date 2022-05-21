@@ -41,23 +41,28 @@ app.use(
       }
     `),
     rootValue: {
-      events: () => events,
+      events: async () => {
+        try {
+          const allEvents = await Event.find()
+        } catch (err) {
+          console.log('err fetching all events', err);
+          throw new Error(err);
+        }
+      },
       createEvent: async (args) => {
-        console.log('createEvent args', args);
         const { title, description, price } = args.eventInput;
-        const event = {
+        const event = new Event({
           title,
           description,
           price,
           date: new Date()
-        }
+        })
         try {
-          const newEvent = await Event.create(event)
-          console.log('newEvent: ', newEvent)
-          newEvent.date = new Date(newEvent.date).toISOString();
-          return newEvent
+          const newEvent = await event.save();
+          return {...newEvent._doc}
         } catch (err) {
           console.log('create event err', err)
+          throw new Error(err)
         }
       }
     },
