@@ -70,7 +70,10 @@ app.use(
         try {
           const user = await User.find({ email })
           console.log('user: ', user)
-          return user[0] ? {...user[0]._doc} : {};
+          if (user.length < 1) {
+            throw new Error('Email ID or password are invalid')
+          }
+          return {...user[0]._doc, password: null};
         } catch (err) {
           console.log('error fetching user from DB', err);
           throw err;
