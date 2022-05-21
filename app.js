@@ -43,10 +43,12 @@ app.use(
     rootValue: {
       events: async () => {
         try {
-          const allEvents = await Event.find()
+          const allEvents = await Event.find();
+          console.log('allevents', allEvents);
+          return allEvents;
         } catch (err) {
           console.log('err fetching all events', err);
-          throw new Error(err);
+          throw err;
         }
       },
       createEvent: async (args) => {
@@ -62,7 +64,7 @@ app.use(
           return {...newEvent._doc}
         } catch (err) {
           console.log('create event err', err)
-          throw new Error(err)
+          throw err;
         }
       }
     },
