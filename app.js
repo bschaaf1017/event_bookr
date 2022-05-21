@@ -95,13 +95,19 @@ app.use(
       createUser: async (args) => {
         const { email, password } = args.userInput;
         try {
-          const hashedPw = await bcrypt.hash(password, 12);
-          const user = new User({
-            email,
-            password: hashedPw
-          })
-          const newUser = await user.save();
-          return {...newUser._doc}
+          const exisits = await User.find({ email });
+          if (exisits.length > 0) {
+            console.log('exisits: ', exisits)
+            throw new Error('User with this email already exists.')
+          } else {
+            const hashedPw = await bcrypt.hash(password, 12);
+            const user = new User({
+              email,
+              password: hashedPw
+            })
+            const newUser = await user.save();
+            return {...newUser._doc}
+          }
         } catch (err) {
           console.log('error creating new user', err);
           throw err;
